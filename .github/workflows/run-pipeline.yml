@@ -9,8 +9,13 @@ on:
 jobs:
   run-pipeline:
     # 🚨 Definimos la imagen Docker que debe usar este job
-    # Reemplazar 'jandromani/testcopilot' con el nombre de su repositorio si es diferente
-    container: ghcr.io/${{ github.repository }}:latest
+    # CRÍTICO: Necesitamos autenticar la descarga en el bloque container.
+    container: 
+      image: ghcr.io/${{ github.repository }}:latest
+      credentials:
+        # Usamos el token por defecto para descargar la imagen de GHCR
+        username: ${{ github.actor }} 
+        password: ${{ secrets.GITHUB_TOKEN }}
     
     runs-on: ubuntu-latest # Este es el host que ejecutará el contenedor
     
@@ -21,17 +26,10 @@ jobs:
       OPENROUTER_API_URL: 'https://api.openrouter.ai/v1/chat/completions'
 
     steps:
+      # Ya no necesitamos el login en steps porque lo hicimos en el bloque container
       - name: Checkout repository (necesario para montar el código fuente)
         uses: actions/checkout@v4
-
-      # 🚨 Paso CRÍTICO: Login en GHCR para poder obtener la imagen privada
-      - name: Log in to GitHub Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }} # Usamos el token predeterminado
-
+      
       # 🚨 NO NECESITAMOS INSTALAR NADA MÁS. El contenedor ya tiene Node y NPM.
       
       - name: Run diagnostics inside the Container
