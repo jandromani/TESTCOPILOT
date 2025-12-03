@@ -1,53 +1,72 @@
-name: Run Pipeline CI
+name: 🚀 Ejecutar Pipeline de CI (Desde Contenedor)
 
+# 1. Definición de Triggers
 on:
+  # Permite la ejecución manual desde la UI de GitHub Actions
   workflow_dispatch: {}
+  # Se dispara automáticamente en cada push a la rama principal
   push:
     branches:
       - main
+  # También se recomienda para Pull Requests
+  pull_request:
+    branches:
+      - main
 
+# 2. Definición de Jobs
 jobs:
   run-pipeline:
-    # 🚨 Definimos la imagen Docker que debe usar este job
-    # CRÍTICO: Necesitamos autenticar la descarga en el bloque container.
-    container: 
+    name: Pipeline de Integración Continua
+    
+    # 🚨 CRÍTICO: El host donde se ejecutará el contenedor.
+    runs-on: ubuntu-latest
+    
+    # 3. Configuración del Contenedor Docker
+    container:
+      # La imagen Docker pre-construida desde GHCR
       image: ghcr.io/${{ github.repository }}:latest
+      
+      # ⚠️ Mejora: Autenticación de la imagen en GHCR
+      # Se recomienda usar un 'token' o 'pat' en lugar de username/password 
+      # en el bloque 'credentials' para descargar imágenes privadas en jobs.
       credentials:
-        # Usamos el token por defecto para descargar la imagen de GHCR
+        # ${{ github.actor }} es el usuario que activó la acción
         username: ${{ github.actor }} 
+        # ${{ secrets.GITHUB_TOKEN }} es el token temporal de la acción
         password: ${{ secrets.GITHUB_TOKEN }}
-    
-    runs-on: ubuntu-latest # Este es el host que ejecutará el contenedor
-    
-    # 🚨 CRÍTICO: Inyectar la clave API en el contenedor
+        
+    # 4. Inyección de Variables de Entorno
     env:
+      # Inyección de la clave secreta
       OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }} 
+      # Variables de configuración del LLM
       ENABLE_LLM: '1'
       OPENROUTER_API_URL: 'https://api.openrouter.ai/v1/chat/completions'
 
+    # 5. Pasos de Ejecución
     steps:
-      # Ya no necesitamos el login en steps porque lo hicimos en el bloque container
-      - name: Checkout repository (necesario para montar el código fuente)
+      - name: 1. Checkout del Código Fuente
+        # Este paso descarga el código fuente y lo monta dentro del contenedor
         uses: actions/checkout@v4
       
-      # 🚨 NO NECESITAMOS INSTALAR NADA MÁS. El contenedor ya tiene Node y NPM.
-      
-      - name: Run diagnostics inside the Container
-        # El comando se ejecuta directamente DENTRO del contenedor definido arriba.
+      - name: 2. Ejecutar Diagnósticos de Entorno (Dentro del Contenedor)
+        # Verifica que Node/NPM y el entorno sean correctos.
         run: node scripts/vscode-env-diagnostics.js
 
-      - name: Run full pipeline inside the Container
-        # Este comando ejecuta la pipeline, ahora en un entorno aislado y limpio.
+      - name: 3. Ejecutar Pipeline Principal (Dentro del Contenedor)
+        # Ejecuta el script principal de la pipeline
         run: node scripts/run-pipeline.js tests/fixtures/example-spec.json
-        
-      # Los pasos de limpieza y artifacts van aquí...
-      - name: List state directory
+      
+      - name: 4. Listar Directorio de Estado para Depuración
+        # Muestra el contenido de 'state/' antes de subir los artifacts
         run: |
-          echo "Contents of state/"
+          echo "Contenido de 'state/' después de la ejecución:"
           ls -la state || true
 
-      - name: Upload state artifacts
+      - name: 5. Subir Artifacts de Estado
+        # Almacena los resultados de la pipeline para su descarga
         uses: actions/upload-artifact@v4
         with:
-          name: worldminiapp-state
+          name: worldminiapp-state-artifacts
           path: state/**
+          retention-days: 7 # Opcional: define cuántos días se guarda
