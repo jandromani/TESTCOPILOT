@@ -4,51 +4,45 @@ on:
   workflow_dispatch: {}
   push:
     branches:
-      - main
+      - master
 
 jobs:
   run-pipeline:
-    runs-on: ubuntu-latest
+    # 🚨 Definimos la imagen Docker que debe usar este job
+    # Reemplazar 'jandromani/testcopilot' con el nombre de su repositorio si es diferente
+    container: ghcr.io/${{ github.repository }}:latest
+    
+    runs-on: ubuntu-latest # Este es el host que ejecutará el contenedor
+    
+    # 🚨 CRÍTICO: Inyectar la clave API en el contenedor
     env:
-      NODE_VERSION: '22'
+      OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }} 
       ENABLE_LLM: '1'
       OPENROUTER_API_URL: 'https://api.openrouter.ai/v1/chat/completions'
 
     steps:
-      - name: Checkout repository
+      - name: Checkout repository (necesario para montar el código fuente)
         uses: actions/checkout@v4
 
-      - name: Copy .env.example to .env
-        run: cp .env.example .env
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
+      # 🚨 Paso CRÍTICO: Login en GHCR para poder obtener la imagen privada
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
         with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }} # Usamos el token predeterminado
 
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Run diagnostics (non-fatal)
+      # 🚨 NO NECESITAMOS INSTALAR NADA MÁS. El contenedor ya tiene Node y NPM.
+      
+      - name: Run diagnostics inside the Container
+        # El comando se ejecuta directamente DENTRO del contenedor definido arriba.
         run: node scripts/vscode-env-diagnostics.js
-        continue-on-error: true
 
-      - name: Test OpenRouter direct connection (non-fatal)
-        env:
-          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
-          ENABLE_LLM: ${{ env.ENABLE_LLM }}
-        run: node scripts/test-openrouter-direct.js
-        continue-on-error: true
-
-      - name: Run full pipeline
-        env:
-          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
-          ENABLE_LLM: ${{ env.ENABLE_LLM }}
-        run: |
-          echo "Running pipeline against example spec"
-          node scripts/run-pipeline.js tests/fixtures/example-spec.json
-
+      - name: Run full pipeline inside the Container
+        # Este comando ejecuta la pipeline, ahora en un entorno aislado y limpio.
+        run: node scripts/run-pipeline.js tests/fixtures/example-spec.json
+        
+      # Los pasos de limpieza y artifacts van aquí...
       - name: List state directory
         run: |
           echo "Contents of state/"
