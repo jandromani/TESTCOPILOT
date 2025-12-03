@@ -1,59 +1,53 @@
-name: Build and Publish Docker Image
+name: Build & Push Docker Image
 
 on:
-  workflow_dispatch: {}
-
-permissions:
-  contents: read
-  packages: write
+  push:
+    branches:
+      - main
+    # Opcional: solo correr si el Dockerfile o archivos relacionados cambian
+    paths:
+      - 'Dockerfile'
+      - 'package.json'
 
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
+    
+    # 🚨 CRÍTICO: Configurar permisos para el token GITHUB_TOKEN
+    # Necesita al menos 'packages: write' para subir a GHCR
+    permissions:
+      contents: read
+      packages: write
+      
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set registry tag
-        run: echo "REGISTRY_TAG=ghcr.io/${{ toLower(github.repository) }}:latest" >> $GITHUB_ENV
+      # 1. Configurar variables de registro (Registry)
+      - name: Set up Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository }} # ghcr.io/usuario/repositorio
+          tags: |
+            type=sha,format=long # Usa el hash del commit como tag
 
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v2
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
-
-      - name: Debug info
-        run: |
-          echo "Runner: $(uname -a || hostname)"
-          docker --version || true
-          echo "Checking env vars..."
-          echo "GHCR_PAT is set: ${GHCR_PAT-}" || true
-
-      - name: Login to GHCR with PAT (if provided)
-        if: ${{ secrets.GHCR_PAT != '' }}
-        uses: docker/login-action@v2
+      # 2. Login en GitHub Container Registry (GHCR)
+      # Usa el GITHUB_TOKEN provisto por GitHub (NO su PAT, es más seguro)
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
         with:
           registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GHCR_PAT }}
+          username: ${{ github.actor }} # Nombre de usuario de GitHub
+          password: ${{ secrets.GITHUB_TOKEN }} # 🚨 Usa el token predeterminado
 
-      - name: Login to GHCR with GITHUB_TOKEN (fallback)
-        if: ${{ secrets.GHCR_PAT == '' }}
-        uses: docker/login-action@v2
+      # 3. Construir la imagen de Docker
+      - name: Build and Push Docker image
+        uses: docker/build-push-action@v5
         with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Build and push image to GHCR
-        uses: docker/build-push-action@v4
-        with:
-          context: .
+          context: . # Usa el directorio raíz como contexto
           push: true
-          platforms: linux/amd64
-          tags: ${{ env.REGISTRY_TAG }}
-
-      - name: Image pushed
-        run: |
-          echo "Image published: $REGISTRY_TAG"
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          # Especifica la ruta al Dockerfile (si no está en la raíz)
+          file: Dockerfile
