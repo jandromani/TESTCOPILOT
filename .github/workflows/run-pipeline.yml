@@ -4,7 +4,7 @@ on:
   workflow_dispatch: {}
   push:
     branches:
-      - master
+      - master # Ajustado a 'master' para coincidir con la rama activa del usuario.
 
 jobs:
   run-pipeline:
