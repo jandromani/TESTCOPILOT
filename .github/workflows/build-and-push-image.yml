@@ -25,16 +25,13 @@ jobs:
     container:
       # La imagen Docker pre-construida desde GHCR
       image: ghcr.io/${{ github.repository }}:latest
-      
       # ⚠️ Mejora: Autenticación de la imagen en GHCR
-      # Se recomienda usar un 'token' o 'pat' en lugar de username/password 
-      # en el bloque 'credentials' para descargar imágenes privadas en jobs.
       credentials:
         # ${{ github.actor }} es el usuario que activó la acción
         username: ${{ github.actor }} 
         # ${{ secrets.GITHUB_TOKEN }} es el token temporal de la acción
         password: ${{ secrets.GITHUB_TOKEN }}
-        
+
     # 4. Inyección de Variables de Entorno
     env:
       # Inyección de la clave secreta
