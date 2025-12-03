@@ -1,6 +1,9 @@
-name: Build & Push Docker Image
+name: Build and Push Docker Image (Contenedor)
 
 on:
+  # Permitir el lanzamiento manual del workflow desde la interfaz de GitHub
+  workflow_dispatch: {}
+  
   push:
     branches:
       - master
@@ -21,7 +24,7 @@ jobs:
       
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions:checkout@v4
 
       # 1. Configurar variables de registro (Registry)
       - name: Set up Docker metadata
