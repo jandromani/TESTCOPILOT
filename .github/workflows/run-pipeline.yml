@@ -8,39 +8,38 @@ on:
 
 jobs:
   run-pipeline:
-    # 🚨 Definimos la imagen Docker que debe usar este job
-    # CRÍTICO: Necesitamos autenticar la descarga en el bloque container.
+    # Definimos la imagen Docker que debe usar este job
     container: 
       image: ghcr.io/${{ github.repository }}:latest
       credentials:
-        # Usamos el token por defecto para descargar la imagen de GHCR
+        # CRÍTICO: Usamos el token por defecto para descargar la imagen de GHCR (imagen privada)
         username: ${{ github.actor }} 
         password: ${{ secrets.GITHUB_TOKEN }}
     
     runs-on: ubuntu-latest # Este es el host que ejecutará el contenedor
     
-    # 🚨 CRÍTICO: Inyectar la clave API en el contenedor
+    # CRÍTICO: Inyectar la clave API y variables de entorno en el contenedor
     env:
       OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }} 
       ENABLE_LLM: '1'
       OPENROUTER_API_URL: 'https://api.openrouter.ai/v1/chat/completions'
 
     steps:
-      # Ya no necesitamos el login en steps porque lo hicimos en el bloque container
-      - name: Checkout repository (necesario para montar el código fuente)
+      # 1. Checkout del código fuente
+      # Necesario para que el contenedor pueda acceder a los scripts
+      - name: Checkout repository
         uses: actions/checkout@v4
       
-      # 🚨 NO NECESITAMOS INSTALAR NADA MÁS. El contenedor ya tiene Node y NPM.
-      
+      # 2. Ejecutar diagnósticos DENTRO del contenedor
       - name: Run diagnostics inside the Container
         # El comando se ejecuta directamente DENTRO del contenedor definido arriba.
         run: node scripts/vscode-env-diagnostics.js
 
+      # 3. Ejecutar pipeline principal DENTRO del contenedor
       - name: Run full pipeline inside the Container
-        # Este comando ejecuta la pipeline, ahora en un entorno aislado y limpio.
         run: node scripts/run-pipeline.js tests/fixtures/example-spec.json
         
-      # Los pasos de limpieza y artifacts van aquí...
+      # 4. Limpieza y subida de artifacts
       - name: List state directory
         run: |
           echo "Contents of state/"
