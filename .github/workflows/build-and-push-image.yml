@@ -1,57 +1,53 @@
-name: Build and Push Docker Image (Contenedor)
+name: Run Pipeline CI
 
 on:
-  # Permitir el lanzamiento manual del workflow desde la interfaz de GitHub
   workflow_dispatch: {}
-  
   push:
     branches:
-      - master
-    # Opcional: solo correr si el Dockerfile o archivos relacionados cambian
-    paths:
-      - 'Dockerfile'
-      - 'package.json'
+      - main
 
 jobs:
-  build-and-push:
-    runs-on: ubuntu-latest
+  run-pipeline:
+    # 🚨 Definimos la imagen Docker que debe usar este job
+    # CRÍTICO: Necesitamos autenticar la descarga en el bloque container.
+    container: 
+      image: ghcr.io/${{ github.repository }}:latest
+      credentials:
+        # Usamos el token por defecto para descargar la imagen de GHCR
+        username: ${{ github.actor }} 
+        password: ${{ secrets.GITHUB_TOKEN }}
     
-    # 🚨 CRÍTICO: Configurar permisos para el token GITHUB_TOKEN
-    # Necesita al menos 'packages: write' para subir a GHCR
-    permissions:
-      contents: read
-      packages: write
-      
+    runs-on: ubuntu-latest # Este es el host que ejecutará el contenedor
+    
+    # 🚨 CRÍTICO: Inyectar la clave API en el contenedor
+    env:
+      OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }} 
+      ENABLE_LLM: '1'
+      OPENROUTER_API_URL: 'https://api.openrouter.ai/v1/chat/completions'
+
     steps:
-      - name: Checkout repository
-        # ERROR CORREGIDO: Cambiado 'actions:' por 'actions/'
+      # Ya no necesitamos el login en steps porque lo hicimos en el bloque container
+      - name: Checkout repository (necesario para montar el código fuente)
         uses: actions/checkout@v4
+      
+      # 🚨 NO NECESITAMOS INSTALAR NADA MÁS. El contenedor ya tiene Node y NPM.
+      
+      - name: Run diagnostics inside the Container
+        # El comando se ejecuta directamente DENTRO del contenedor definido arriba.
+        run: node scripts/vscode-env-diagnostics.js
 
-      # 1. Configurar variables de registro (Registry)
-      - name: Set up Docker metadata
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ghcr.io/${{ github.repository }} # ghcr.io/usuario/repositorio
-          tags: |
-            type=sha,format=long # Usa el hash del commit como tag
+      - name: Run full pipeline inside the Container
+        # Este comando ejecuta la pipeline, ahora en un entorno aislado y limpio.
+        run: node scripts/run-pipeline.js tests/fixtures/example-spec.json
+        
+      # Los pasos de limpieza y artifacts van aquí...
+      - name: List state directory
+        run: |
+          echo "Contents of state/"
+          ls -la state || true
 
-      # 2. Login en GitHub Container Registry (GHCR)
-      # Usa el GITHUB_TOKEN provisto por GitHub (NO su PAT, es más seguro)
-      - name: Log in to GitHub Container Registry
-        uses: docker/login-action@v3
+      - name: Upload state artifacts
+        uses: actions/upload-artifact@v4
         with:
-          registry: ghcr.io
-          username: ${{ github.actor }} # Nombre de usuario de GitHub
-          password: ${{ secrets.GITHUB_TOKEN }} # 🚨 Usa el token predeterminado
-
-      # 3. Construir la imagen de Docker
-      - name: Build and Push Docker image
-        uses: docker/build-push-action@v5
-        with:
-          context: . # Usa el directorio raíz como contexto
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          # Especifica la ruta al Dockerfile (si no está en la raíz)
-          file: Dockerfile
+          name: worldminiapp-state
+          path: state/**
