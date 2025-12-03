@@ -1,0 +1,12 @@
+{
+  "pdf_reader": {
+    "name": "pdf-reader",
+    "version": "0.1",
+    "notes": "Placeholder; integrate a real PDF-to-text tool"
+  },
+  "text_processor": {
+    "name": "text-processor",
+    "version": "0.1",
+    "rules": ["extract_title","extract_characters","extract_plot_points"]
+  }
+}

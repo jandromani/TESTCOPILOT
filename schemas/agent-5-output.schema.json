@@ -1,0 +1,35 @@
+{
+  "$id": "https://worldminiapp.local/schemas/agent-5-output.schema.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Agent-5 (UI/Frontend) Output",
+  "type": "object",
+  "required": ["status", "content", "metadata"],
+  "properties": {
+    "status": {
+      "type": "string",
+      "enum": ["ok", "error", "retry"]
+    },
+    "content": {
+      "oneOf": [
+        { "type": "array", "items": { "type": "object" } },
+        { "type": "object" }
+      ],
+      "description": "UI components or component config"
+    },
+    "path": {
+      "type": ["string", "null"]
+    },
+    "metadata": {
+      "type": "object",
+      "required": ["agent", "runId", "timestamp"],
+      "properties": {
+        "agent": { "type": "string", "const": "agent-5" },
+        "runId": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" },
+        "model": { "type": ["string", "null"] },
+        "componentCount": { "type": ["integer", "null"] }
+      }
+    }
+  },
+  "additionalProperties": false
+}

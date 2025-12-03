@@ -1,0 +1,7 @@
+{
+  "auth": {
+    "type": "none",
+    "notes": "Set to real auth in production"
+  },
+  "default_owner": "agent-0"
+}

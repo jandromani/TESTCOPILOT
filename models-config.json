@@ -1,0 +1,45 @@
+{
+  "provider": "openrouter",
+  "openrouter": {
+    "endpoint": "https://api.openrouter.ai/v1/chat/completions",
+    "note": "All models are free tier from OpenRouter. Requires OPENROUTER_API_KEY env var."
+  },
+  "free_models": [
+    "x-ai/grok-4.1-fast:free",
+    "kwaipilot/kat-coder-pro:free",
+    "qwen/qwen3-coder:free",
+    "google/gemini-2.0-flash-exp:free",
+    "openrouter/bert-nebulon-alpha"
+  ],
+  "agent_models": {
+    "agent-0": "x-ai/grok-4.1-fast:free",
+    "agent-1": "google/gemini-2.0-flash-exp:free",
+    "agent-2": "x-ai/grok-4.1-fast:free",
+    "agent-3": "kwaipilot/kat-coder-pro:free",
+    "agent-4": "kwaipilot/kat-coder-pro:free",
+    "agent-5": "qwen/qwen3-coder:free",
+    "agent-6": "kwaipilot/kat-coder-pro:free",
+    "agent-7": "x-ai/grok-4.1-fast:free",
+    "agent-8": "google/gemini-2.0-flash-exp:free",
+    "agent-9": "x-ai/grok-4.1-fast:free",
+    "agent-10": "google/gemini-2.0-flash-exp:free",
+    "agent-11": "qwen/qwen3-coder:free",
+    "agent-12": "x-ai/grok-4.1-fast:free",
+    "agent-13": "google/gemini-2.0-flash-exp:free",
+    "agent-14": "x-ai/grok-4.1-fast:free",
+    "agent-15": "google/gemini-2.0-flash-exp:free",
+    "agent-16": "x-ai/grok-4.1-fast:free",
+    "agent-17": "x-ai/grok-4.1-fast:free"
+  },
+  "per_agent_token_limits": {
+    "agent-1": 2000,
+    "agent-4": 4000,
+    "agent-8": 10000,
+    "default": 1500
+  },
+  "fallback_models": [
+    "x-ai/grok-4.1-fast:free",
+    "google/gemini-2.0-flash-exp:free",
+    "kwaipilot/kat-coder-pro:free"
+  ]
+}

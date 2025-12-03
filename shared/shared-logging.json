@@ -1,0 +1,8 @@
+{
+  "level": "info",
+  "format": "text",
+  "destination": "./logs/agents.log",
+  "rotation": {
+    "enabled": false
+  }
+}

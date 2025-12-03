@@ -1,0 +1,2 @@
+CREATE TABLE IF NOT EXISTS characters (id INTEGER PRIMARY KEY, name TEXT, role TEXT, backstory TEXT);
+CREATE TABLE IF NOT EXISTS plot (scene_id INTEGER PRIMARY KEY, description TEXT, characters_involved TEXT);

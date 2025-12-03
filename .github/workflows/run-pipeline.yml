@@ -1,0 +1,58 @@
+name: Run Pipeline CI
+
+on:
+  workflow_dispatch: {}
+  push:
+    branches:
+      - main
+
+jobs:
+  run-pipeline:
+    runs-on: ubuntu-latest
+    env:
+      NODE_VERSION: '22'
+      ENABLE_LLM: '1'
+      OPENROUTER_API_URL: 'https://api.openrouter.ai/v1/chat/completions'
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run diagnostics (non-fatal)
+        run: node scripts/vscode-env-diagnostics.js
+        continue-on-error: true
+
+      - name: Test OpenRouter direct connection (non-fatal)
+        env:
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          ENABLE_LLM: ${{ env.ENABLE_LLM }}
+        run: node scripts/test-openrouter-direct.js
+        continue-on-error: true
+
+      - name: Run full pipeline
+        env:
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          ENABLE_LLM: ${{ env.ENABLE_LLM }}
+        run: |
+          echo "Running pipeline against example spec"
+          node scripts/run-pipeline.js tests/fixtures/example-spec.json
+
+      - name: List state directory
+        run: |
+          echo "Contents of state/"
+          ls -la state || true
+
+      - name: Upload state artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: worldminiapp-state
+          path: state/**

@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  worldminiapp:
+    build: .
+    container_name: worldminiapp
+    env_file:
+      - .env
+    environment:
+      # Override or add any environment variables here. OPENROUTER_API_KEY can be provided in .env or passed via CLI
+      - ENABLE_LLM=${ENABLE_LLM:-0}
+    volumes:
+      - ./state:/usr/src/app/state
+    tty: true
+    stdin_open: true
+    # By default, run the pipeline; you can override the command to open a shell for debugging
+    command: ["node", "scripts/run-all-agents.js", "tests/fixtures/example-spec.json"]

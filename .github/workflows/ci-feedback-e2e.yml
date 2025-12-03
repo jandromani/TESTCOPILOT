@@ -1,0 +1,24 @@
+name: CI - Feedback Loop E2E (mock LLM)
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  e2e-feedback:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+      - name: Install deps
+        run: npm ci
+      - name: Run CI E2E with mocked LLM
+        env:
+          ENABLE_LLM: '1'
+          OPENROUTER_API_KEY: 'CI_MOCK'
+        run: node scripts/ci/ci-e2e-mock-llm.js

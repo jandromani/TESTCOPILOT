@@ -1,0 +1,82 @@
+name: CI - Lint, Test & Validate
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        run: npm ci || npm install
+
+      - name: Lint & Validate JSON
+        run: |
+          # Check JSON files are valid
+          node -e "require('./models-config.json'); console.log('✅ models-config.json is valid');"
+          node -e "require('./shared/common-tools.json'); console.log('✅ common-tools.json is valid');"
+          node -e "require('./shared/shared-config.json'); console.log('✅ shared-config.json is valid');"
+          node -e "require('./shared/shared-logging.json'); console.log('✅ shared-logging.json is valid');"
+
+      - name: Verify Agent Structure
+        run: |
+          # Verify all agent folders and required files exist
+          for agent in {0..17}; do
+            folder="custom-agents/agent-$agent"
+            if [ -d "$folder" ]; then
+              if [ -f "$folder/agent-$agent.agent.md" ] && [ -f "$folder/agent-$agent-config.md" ] && [ -f "$folder/agent-$agent-actions.js" ]; then
+                echo "✅ Agent $agent structure is valid"
+              else
+                echo "❌ Agent $agent missing required files"
+                exit 1
+              fi
+            else
+              echo "⚠️ Agent $agent folder not found"
+            fi
+          done
+
+      - name: Check Environment Configuration
+        run: |
+          # Verify .env.example exists and contains expected keys
+          if [ -f ".env.example" ]; then
+            grep -q "OPENROUTER_API_KEY" .env.example && echo "✅ .env.example contains OPENROUTER_API_KEY"
+            grep -q "OPENROUTER_API_URL" .env.example && echo "✅ .env.example contains OPENROUTER_API_URL"
+          else
+            echo "❌ .env.example not found"
+            exit 1
+          fi
+
+      - name: Verify GitHub Secrets (Optional Warning)
+        run: |
+          echo "⚠️ Verify that OPENROUTER_API_KEY is set in GitHub Secrets for production workflows"
+          echo "  See: https://docs.github.com/en/actions/security-guides/encrypted-secrets"
+
+      - name: Test Runner Syntax
+        run: |
+          node -c src/runner.js && echo "✅ src/runner.js syntax is valid"
+          node -c shared/openrouter.js && echo "✅ shared/openrouter.js syntax is valid"
+          node -c shared/retries.js && echo "✅ shared/retries.js syntax is valid"
+
+      - name: Summary
+        run: |
+          echo "===================="
+          echo "✨ All CI checks passed!"
+          echo "===================="
+          echo "✅ Node dependencies installed"
+          echo "✅ JSON configuration files are valid"
+          echo "✅ Agent structure verified"
+          echo "✅ Environment configuration checked"
+          echo "✅ Code syntax validated"
+          echo ""
+          echo "Next: Push a PDF file or run 'npm start' to trigger the runner"

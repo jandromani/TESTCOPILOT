@@ -1,0 +1,31 @@
+name: PDF Trigger Pipeline
+
+on:
+  push:
+    paths:
+      - '**/*.pdf'
+
+jobs:
+  process-pdf:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+      - name: Install dependencies
+        run: |
+          npm ci || npm install
+      - name: Find changed PDFs
+        id: pdfs
+        run: |
+          echo "FILES=$(git diff --name-only ${{ github.sha }} ${{ github.sha }} | grep -E '\.pdf$' || true)" >> $GITHUB_ENV
+      - name: Run runner for each PDF
+        if: env.FILES != ''
+        run: |
+          for f in $FILES; do
+            echo "Processing $f";
+            node src/runner.js "$f";
+          done

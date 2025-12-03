@@ -1,0 +1,26 @@
+[
+  {
+    "service": "api",
+    "docker": "Servicio api configurado con imagen node:18 y puertos 3000",
+    "k8s": {
+      "apiVersion": "apps/v1",
+      "kind": "Deployment",
+      "metadata": {
+        "name": "api-deployment"
+      },
+      "spec": {
+        "replicas": 1,
+        "template": {
+          "spec": {
+            "containers": [
+              {
+                "name": "api",
+                "image": "node:18"
+              }
+            ]
+          }
+        }
+      }
+    }
+  }
+]

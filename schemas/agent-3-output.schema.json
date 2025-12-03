@@ -1,0 +1,46 @@
+{
+  "$id": "https://worldminiapp.local/schemas/agent-3-output.schema.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Agent-3 (Database Schema) Output",
+  "type": "object",
+  "required": ["status", "content", "metadata"],
+  "properties": {
+    "status": {
+      "type": "string",
+      "enum": ["ok", "error", "retry"],
+      "description": "Execution status"
+    },
+    "content": {
+      "oneOf": [
+        {
+          "type": "string",
+          "description": "SQL schema string"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "sql": { "type": "string" },
+            "tables": { "type": "array" },
+            "indexes": { "type": "array" }
+          }
+        }
+      ]
+    },
+    "path": {
+      "type": ["string", "null"],
+      "description": "Path to persisted schema file"
+    },
+    "metadata": {
+      "type": "object",
+      "required": ["agent", "runId", "timestamp"],
+      "properties": {
+        "agent": { "type": "string", "const": "agent-3" },
+        "runId": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" },
+        "model": { "type": ["string", "null"] },
+        "llmEnhanced": { "type": "boolean" }
+      }
+    }
+  },
+  "additionalProperties": false
+}

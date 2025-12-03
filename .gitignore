@@ -1,0 +1,37 @@
+# Environment variables — NEVER commit API keys or secrets
+.env
+.env.local
+.env.*.local
+
+# Dependencies
+node_modules/
+package-lock.json
+yarn.lock
+
+# IDE & OS
+.vscode/settings.json
+.DS_Store
+*.swp
+*.swo
+*~
+Thumbs.db
+
+# Build & runtime
+dist/
+build/
+*.log
+state/runner-state.json
+state/metrics.json
+
+# Temporary files
+tmp/
+temp/
+
+# Test coverage
+coverage/
+.nyc_output/
+
+# History & secrets scan artifacts
+.git-crypt/
+.env.history
+secret-scan-results.json

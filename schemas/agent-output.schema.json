@@ -1,0 +1,23 @@
+{
+  "$id": "https://worldminiapp.local/schemas/agent-output.schema.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": ["status","content","metadata"],
+  "properties": {
+    "status": { "type": "string", "enum": ["ok","error","retry"] },
+    "content": { "type": ["object","array","string","null"] },
+    "path": { "type": ["string","null"] },
+    "metadata": {
+      "type": "object",
+      "required": ["agent","runId","timestamp"],
+      "properties": {
+        "agent": { "type": "string" },
+        "runId": { "type": "string" },
+        "taskId": { "type": ["string","integer","null"] },
+        "timestamp": { "type": "string", "format": "date-time" },
+        "model": { "type": ["string","null"] }
+      }
+    }
+  },
+  "additionalProperties": true
+}

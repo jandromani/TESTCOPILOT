@@ -1,0 +1,37 @@
+{
+  "timestamp": "2025-12-03T10:01:12.208Z",
+  "platform": "win32",
+  "nodeVersion": "v22.13.1",
+  "issues": [
+    "DNS resolution failed: ENOTFOUND",
+    "TCP connection failed: ENOTFOUND",
+    "OpenRouter connection error: ENOTFOUND"
+  ],
+  "warnings": [
+    "OPENROUTER_API_URL missing from environment",
+    "Firewall may be blocking connections"
+  ],
+  "results": {
+    "envVariables": {
+      "OPENROUTER_API_KEY": true,
+      "ENABLE_LLM": true,
+      "OPENROUTER_API_URL": false
+    },
+    "nodeVersion": 22,
+    "envFile": {
+      "exists": true,
+      "hasKey": true,
+      "hasEnable": true
+    },
+    "dns": {
+      "success": false,
+      "error": "ENOTFOUND"
+    },
+    "tcpConnection": false,
+    "proxy": false,
+    "openRouterAPI": {
+      "success": false,
+      "error": "ENOTFOUND"
+    }
+  }
+}

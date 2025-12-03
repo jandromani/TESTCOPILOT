@@ -1,0 +1,34 @@
+{
+  "name": "worldminiapp-agents-demo",
+  "version": "0.1.0",
+  "private": true,
+  "description": "17-agent orchestration system for autonomous content generation with free OpenRouter LLM",
+  "main": "src/runner.js",
+  "scripts": {
+    "start": "node src/runner.js",
+    "validate": "node validate.js",
+    "worker": "node scripts/worker-pool.js",
+    "diagnose": "node diagnose.js",
+    "prestart": "node validate.js",
+    "lint": "echo 'no lint configured'",
+    "test": "node tests/run-tests.js",
+    "dev": "npm start -- /path/to/spec.json"
+  },
+  "dependencies": {
+    "ajv": "^8.12.0",
+    "dotenv": "^17.2.3",
+    "node-fetch": "^2.6.7",
+    "pdf-parse": "^1.1.1"
+  },
+  "keywords": [
+    "agents",
+    "orchestration",
+    "llm",
+    "openrouter",
+    "content-generation",
+    "kubernetes",
+    "pdf"
+  ],
+  "author": "Your Name",
+  "license": "MIT"
+}

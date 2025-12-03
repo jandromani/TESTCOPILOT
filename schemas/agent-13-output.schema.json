@@ -1,0 +1,36 @@
+{
+  "$id": "https://worldminiapp.local/schemas/agent-13-output.schema.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Agent-13 (Security) Output",
+  "type": "object",
+  "required": ["status", "content", "metadata"],
+  "properties": {
+    "status": {
+      "type": "string",
+      "enum": ["ok", "error", "retry"]
+    },
+    "content": {
+      "oneOf": [
+        { "type": "object" },
+        { "type": "string" },
+        { "type": "array" }
+      ],
+      "description": "Security scan results"
+    },
+    "path": {
+      "type": ["string", "null"]
+    },
+    "metadata": {
+      "type": "object",
+      "required": ["agent", "runId", "timestamp"],
+      "properties": {
+        "agent": { "type": "string", "const": "agent-13" },
+        "runId": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" },
+        "model": { "type": ["string", "null"] },
+        "scanType": { "type": ["string", "null"] }
+      }
+    }
+  },
+  "additionalProperties": false
+}
